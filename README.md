@@ -1,5 +1,5 @@
 # Programmieraufgabe
-Hier zeige ich eine Beispiels-Visualisierung - mehr dazu ist im Rmarkdown selber beschrieben. 
+Hier zeige ich eine Beispiels-Visualisierung - mehr dazu ist im [Rmarkdown-Dokument](https://github.com/shaenzi/Programmieraufgabe/blob/main/ZumBeispielVulkane.Rmd) selber beschrieben. 
 
 # Dies selber laufen lassen
 Dieses Repo benutzt {renv}, um die Packages/Abhängigkeiten zu tracken. Dies ermöglicht Reproduzierbarkeit auf eine einfache Weise:
