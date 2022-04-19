@@ -5,8 +5,7 @@ Hier zeige ich eine Beispiels-Visualisierung - mehr dazu ist im [Rmarkdown-Dokum
 Dieses Repo benutzt {renv}, um die Packages/Abhängigkeiten zu tracken. Dies ermöglicht Reproduzierbarkeit auf eine einfache Weise:
 
 1. git repo klonen
-2. `renv::init()`
-3. `renv::restore()`
+2. `renv::restore()` und bestätigen, dass man alle Packages installieren möchte.
 
 Danach kann man den Code im [RMarkdown-Dokument](https://github.com/shaenzi/Programmieraufgabe/blob/main/ZumBeispielVulkane.Rmd) laufen lassen.
 
