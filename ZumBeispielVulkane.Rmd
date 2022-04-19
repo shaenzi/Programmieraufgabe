@@ -1,8 +1,8 @@
 ---
 title: "Einmal Vulkane interaktiv, bitte"
 author: "Sara Hänzi"
-date: '2022-04-18'
-output: html_document
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output: rmdformats::downcute
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +17,7 @@ Als Thema verwende ich Vulkane, die ich für ein Projekt in meinem Kurs zu [Data
 
 # Die Daten
 
-Die Daten waren in der Aufgabe vorgegeben, und zwar [dieser Datensatz](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-05-12/readme.md) des [#TidyTuesday](https://www.tidytuesday.com/): dies ist ein Podcast und eine Plattform zum Austausch für Leute, die R lernen. Dafür wird jede Woche - dienstags, wie der Name schon sagt - auf [github](https://github.com/rfordatascience/tidytuesday) und Twitter ein anderer Datensatz vorgestellt, den die Leute dann visualisieren können. Diese Visualisierungen werden dann oft auf Twitter geteilt, und sind mit '#TidyTuesday' findbar. Die Datensätze selber sind tendenziell eher klein und schon sehr 'sauber', also gut organisiert, ohne fehlende Datensätze usw. Wobei in diesem Fall war dann doch noch nicht alles ganz so klar, wie weiter unten dokumentiert ist.
+Die Daten waren in der Aufgabe vorgegeben, und zwar [dieser Datensatz](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-05-12/readme.md) des [#TidyTuesday](https://www.tidytuesday.com/): dies ist ein Podcast und eine Plattform zum Austausch für Leute, die R lernen. Dafür wird jede Woche - dienstags, wie der Name schon sagt - auf [github](https://github.com/rfordatascience/tidytuesday) und Twitter ein anderer Datensatz vorgestellt, den die Leute dann visualisieren können. Diese Visualisierungen werden oft auf Twitter geteilt, und sind mit '#TidyTuesday' findbar. Die Datensätze selber sind tendenziell eher klein und schon sehr 'sauber', also gut organisiert, ohne fehlende Einträge usw. Wobei in diesem Fall war dann doch noch nicht alles ganz so klar, wie weiter unten dokumentiert ist.
 
 # Los geht's: Daten einlesen und organisieren
 
@@ -117,6 +117,8 @@ volcano_last_eruption$last_eruption_year == volcano_last_eruption$end_year
     In der Gruppe der `NA` heisst es mehrheitlich im Vulkan-Tibble, dass der letzte Ausbruch nicht bekannt ist; allerdings auch nciht überall. Da ich gerne zusätzliche Info zum Vulkan-Tibble aus dem Eruptions-tibble nehmen möchte, gehe ich mit dieser Art, die Daten zu kombinieren, einmal weiter, auch wenn noch nicht alle Fragen geklärt sind.
 </details> 
 
+# Und visualisieren
+
 ## Wo liegen die Vulkane, und was haben sie für Attribute?
 
 Dann möchte ich gerne zusätzliche Infos zu den Vulkanen als Tooltip darstellen, dazu bereite ich hier den Text vor:
@@ -182,7 +184,7 @@ leaflet() %>%
 ```
 
 ## Wieviele Leute leben in der Nähe von aktiven Vulkanen?
-Eine weitere mögliche Überlegung sind die Leute, die in der nähe von aktiven und explosiven Vulkanen leben. Daher schaue ich mir an, wieviele Leute in der Nähe von Vulkanen leben, die in den letzten 50 Jahren mit einem Explosivitäts-Index von mindestens 2 ausgebrochen sind.
+Eine weitere mögliche Überlegung sind die Leute, die in der nähe von aktiven und explosiven Vulkanen leben. Daher schaue ich mir an, wieviele Leute in der Nähe von Vulkanen leben, die in den letzten 50 Jahren mit einem Explosivitäts-Index von mindestens 3 ausgebrochen sind.
 
 ```{r}
 pop_near_volcano <- volcano %>%
@@ -202,16 +204,8 @@ volcano_eruptions_last_50y <- eruptions %>%
   tidyr::drop_na(evidence_method_dating) %>%
   filter(end_year > (2022-50)) %>%
   group_by(volcano_number) %>%
-  #slice_max(order_by = end_year) %>%
   select(-volcano_name, -latitude, -longitude) %>%
   right_join(volcano, by = c("volcano_number"))
-```
-
-
-```{r}
-volcano_eruptions_last_50y %>%
-  filter(vei>2) %>%
-  filter(population_within_30_km > 4000000)
 ```
 
 
@@ -223,44 +217,27 @@ volcano_eruptions_last_50y %>%
   geom_point(aes(size=vei)) +
   annotate(
     geom = "curve", x = 2000, y = 4100000, xend = 2010, yend = 4400000, 
-    curvature = -.2, arrow = arrow(length = unit(2, "mm"))
+    curvature = -.2, arrow = arrow(length = unit(2, "mm")),
+    colour = "white",
   ) +
   annotate(geom = "text", x = 1995, y = 4000000, label = "3 eruptions of Merapi on Java, Indonesia", hjust = "left") +
   scale_y_continuous(labels = scales::label_number(scale = 1e-6, suffix = "m")) +
   labs(title = "Recent eruptions with many people nearby",
        x = "year",
-       y = "Population (million)", 
+       y = "Population within 30km radius (million)", 
        size = "Explosivity")
 ```
 
-Todo: add something to the color aesthetic
-also make it interactive?
 
 
 
-# Stuff that does not work
+# Man kann es auch übertreiben...
 
-the legend
-```{r}
-factpal_region <- colorFactor(palette = c("#5F4690", "#1D6996", "#38A6A5", "#0F8554", 
-                                          "#73AF48", "#EDAD08", "#E17C05", "#CC503E", 
-                                          "#94346E", "#6F4070", "#994E95", "#666666", 
-                                          "#000000", "#ffffff", "#66C5CC", "#F6CF71", 
-                                          "#F89C74", "#DCB0F2", "#87C55F"),
-                                 domain = volcano_last_eruption$region)
+falls noch Zeit bleibt kann man auch noch diese Darstellung anschauen, die mehr ästhetisch gefällt als Informationen vermittelt
 
-volcano_last_eruption %>%
-leaflet() %>%
-  addProviderTiles(providers$Esri.WorldPhysical) %>%
-  setView(lng = 0, lat = 0, zoom = 1.49) %>%
-  addCircleMarkers(lng = ~longitude, 
-                   lat = ~latitude,
-                   color = ~factpal_region(region),
-                   radius = 6,
-                   stroke = FALSE, 
-    fillOpacity = 0.8
-    )
-```
+<details>
+  <summary><b>Details: Data wrangling 2</b></summary>
+    Duplikate beim Vulkan-Typ loswerden:
 
 ```{r}
 volcano <- volcano %>%
@@ -282,46 +259,7 @@ volcano <- volcano %>%
   mutate(region = iconv(region, from = 'UTF-8', to = 'ASCII//TRANSLIT'))
 ```
 
-```{r}
-unique(volcano$region)
-```
-
-select last 50y only
-
-top 4 regions regarding highest VEI
-```{r}
-selected_regions <- volcano_eruptions_last_50y %>%
-  group_by(region) %>%
-  slice_max(order_by = vei, with_ties = FALSE) %>%
-  ungroup() %>%
-  slice_max(order_by = vei, n=4) %>%
-  pull(region)
-```
-
-```{r}
-p_small <- volcano_eruptions_last_50y %>%
-  filter(region %in% selected_regions) %>%
-  filter(vei > 1) %>%
-  ggplot(aes(x = region, y = end_year)) +
-  geom_point(aes(size=vei, color=primary_volcano_type), 
-             alpha = 0.6,
-             shape = 16) +
-  rcartocolor::scale_color_carto_d(palette=2, direction = -1) +
-  scale_size(range = c(4, 20), breaks = c(3, 6)) + 
-  guides(size = guide_legend(override.aes = list(alpha = 0.4)),
-         col = guide_legend(ncol = 2, override.aes = list(size = 4))) +
-  scale_y_continuous(breaks = seq(1980, 2020, 10), minor_breaks = NULL) +
-  labs(title = "The most explosive volcano eruptions in the last 50 years",
-       color = "Volcano type",
-       size = "Explosivity",
-       x = "", 
-       y = "") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.8, hjust = 0.8),
-        plot.title = element_text(vjust = 5),
-        plot.title.position = "plot")
-p_small
-```
+Daten der letzten 100 Jahre auswählen:
 
 ```{r}
 volcano_eruptions_last_100y <- eruptions %>%
@@ -334,63 +272,50 @@ volcano_eruptions_last_100y <- eruptions %>%
   right_join(volcano, by = c("volcano_number"))
 ```
 
+Vorbereiten der Längengrade als Kategorie, um das auf die x Achse zu stellen
+
 ```{r}
-p_large <- volcano_eruptions_last_100y %>%
-  #filter(region %in% selected_regions) %>%
-  filter(vei > 1) %>%
-  ggplot(aes(x = region, y = end_year)) +
-  geom_point(aes(size=vei, color=primary_volcano_type), 
-             alpha = 0.6,
-             shape = 16) +
-  rcartocolor::scale_color_carto_d(palette="Prism", direction = -1) +
-  scale_size(range = c(4, 20), breaks = c(2, 4, 6)) + 
-  guides(size = guide_legend(override.aes = list(alpha = 0.4)),
-         col = guide_legend(ncol = 1, override.aes = list(size = 4))) +
-  scale_y_continuous(breaks = seq(1930, 2020, 10), minor_breaks = NULL) +
-  labs(title = "Explosivity of volcano eruptions in the last 100 years",
-       color = "Volcano type",
-       size = "Explosivity",
-       x = "", 
-       y = "") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.8, hjust = 0.8),
-        plot.title = element_text(size = 20),
-        plot.title.position = "plot", 
-        text = element_text(size=17),
-        plot.background = element_rect(fill = "floralwhite", color = "floralwhite"))
-p_large
+volcano_eruptions_last_100y$longitude_category <- cut(volcano_eruptions_last_100y$longitude,
+                                                      12, 
+                                                      labels = as.character(seq(-165, 165, 30)),
+                                                      ordered_result = TRUE)
 ```
+
+plot mit ggplot
 ```{r}
 p_large <- volcano_eruptions_last_100y %>%
-  #filter(region %in% selected_regions) %>%
   filter(vei > 1) %>%
-  ggplot(aes(x = region, y = end_year)) +
+  ggplot(aes(x = longitude_category, y = end_year)) +
   geom_point(aes(size=vei, color=primary_volcano_type, text = paste("Region:", region, "<br>",
                       "Explosivity:", vei, "<br>",
                  "Year:", end_year, "<br>",
                  "Volcano type:", primary_volcano_type, "<br>",
                  "Major rock:", major_rock_1, "<br>",
                  "Elevation:", elevation, "m")), 
-             alpha = 0.6,
+             alpha = 0.5,
              shape = 16) +
   rcartocolor::scale_color_carto_d(palette="Prism", direction = -1) +
   scale_size(range = c(4, 16), breaks = c(2, 4, 6)) + 
   guides(size = guide_legend(override.aes = list(alpha = 0.4)),
-         col = guide_legend(ncol = 1, override.aes = list(size = 4))) +
+         color = guide_legend(ncol = 1, override.aes = list(size = 4))) +
   scale_y_continuous(breaks = seq(1930, 2020, 10), minor_breaks = NULL) +
   labs(title = "Explosivity of volcano eruptions in the last 100 years",
        color = "Volcano type",
-       size = "Explosivity",
-       x = "", 
+       size = "", # apparently plotly cannot deal with multiple legends!
+       x = "Longitude", 
        y = "") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.8, hjust = 0.8),
-        plot.title = element_text(size = 20),
+  theme(plot.title = element_text(size = 20),
         plot.title.position = "plot", 
         text = element_text(size=17),
         plot.background = element_rect(fill = "floralwhite", color = "floralwhite"))
 ```
-```{r}
-ggplotly(p_large, tooltip = c("text"), height = 1.8*480, width = 1.8*640)
-```
+</details>
 
+<details>
+  <summary><b>Details: Der übertriebene Plot</b></summary>
+
+```{r}
+ggplotly(p_large, tooltip = c("text"), height = 1.8*480, width = 1.5*640)
+```
+</details>
